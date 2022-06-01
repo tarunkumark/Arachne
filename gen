@@ -1,0 +1,98 @@
+cargo new $1 || {
+    echo "Error: $1 already exists"
+    exit 1
+}
+# cd $1
+mkdir $1/templates
+echo > $1/src/main.rs
+echo 'use std::fs;
+use std::io::*;
+use std::net::TcpListener;
+use std::net::TcpStream;
+use std::str;
+fn main() {
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+
+    for stream in listener.incoming() {
+        let stream = stream.unwrap();
+
+        handle_connection(stream);
+    }
+}
+
+fn handle_connection(mut stream: TcpStream) {
+    let mut buffer = [0; 1024];
+    stream.read(&mut buffer).unwrap();
+
+    let get = b"GET / HTTP/1.1\r\n";
+    let post = b"POST / HTTP/1.1\r\n";
+    let patch = b"PATCH / HTTP/1.1\r\n";
+    let delete = b"DELETE / HTTP/1.1\r\n";
+
+    if buffer.starts_with(get) {
+        let contents = fs::read_to_string("templates/index.html").unwrap();
+        let s = match str::from_utf8(&buffer) {
+            Ok(v) => v,
+            Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+        };
+        println!("{}", s);
+        let response = format!(
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
+            contents.len(),
+            contents
+        );
+
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    } else {
+        let status_line = "HTTP/1.1 404 NOT FOUND";
+        let contents = fs::read_to_string("templates/404.html").unwrap();
+        // let uri = get_uri_from_request(&buffer);
+        // println!("{}",uri);
+        let s = match str::from_utf8(&buffer) {
+            Ok(v) => v,
+            Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+        };
+        println!("{}", s);
+        let response = format!(
+            "{}\r\nContent-Length: {}\r\n\r\n{}",
+            status_line,
+            contents.len(),
+            contents
+        );
+
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    }
+}
+'>> $1/src/main.rs 
+
+echo  '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Project Arachne</h1>
+    <h2>Hello World</h2>
+    <h2> Project' $1' has been successfully created</h2>
+    <h2>You have successfully installed Arachne</h2>
+</body>
+</html>' >> $1/templates/index.html
+
+echo '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Project Arachne</h1>
+    <h2>404 Not Found</h2>
+</body>
+</html>' >>$1/templates/404.html  
