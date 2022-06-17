@@ -75,8 +75,6 @@ fn handle_connection(mut stream: TcpStream) {
      else {
         let status_line = "HTTP/1.1 404 NOT FOUND";
         let contents = fs::read_to_string("templates/404.html").unwrap();
-        // let uri = get_uri_from_request(&buffer);
-        // println!("{}",uri);
         let s = match str::from_utf8(&buffer) {
             Ok(v) => v,
             Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
@@ -93,20 +91,4 @@ fn handle_connection(mut stream: TcpStream) {
         stream.flush().unwrap();
     }
 
-// fn get_uri_from_request(request: &[u8]) -> &[u8] {
-//     let mut i = 0;
-
-//     for line in request.split(|c| c == b'\r' || c == b'\n') {
-//         if line.starts_with(b"GET") {
-//             i += 4;
-//             while request[i] == b' ' {
-//                 i += 1;
-//             }
-//             return &request[i..];
-//         }
-//         i += line.len();
-//     }
-
-//     b"/404"
-// }
 }
